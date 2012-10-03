@@ -5,17 +5,44 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/simonz05/godis/redis"
 )
 
 var (
+	configPath = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
+	debug = flag.Bool("d", false, "Enable debugging")
+	config Configuration
+	redisClient *redis.Client
 	systemSignals = make(chan os.Signal)
 )
 
 func main() {
-	println("starting scarlet")
+	println("Starting scarlet")
+	flag.Parse()
+	if *debug {
+		println("debug:", "debugging enabled")
+	}
+	
+	// Load the configuration
+	//
+	if *debug {
+		println("debug:", "using configuration file", *configPath)
+	}
+	config, err := loadConfig(*configPath)
+	if err != nil {
+		panic(err)
+	}
+
+	// Connect to the initial Redis host
+	//
+	redisClient = redis.New(config.Redis.ConnectAddr(), 0, config.Redis.Password)
+
+	// Start the mainloop (the signal listener)
+	//
 	startSignalListener()
 	return
 }
