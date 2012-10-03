@@ -5,3 +5,6 @@ scarletd: $(wildcard scarlet/*.go)
 
 clean:
 	rm scarletd
+	find . -iname "*~" -exec rm -f {} \;
+
+.PHONY: all clean
