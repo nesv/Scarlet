@@ -7,4 +7,7 @@ clean:
 	rm scarletd
 	find . -iname "*~" -exec rm -f {} \;
 
-.PHONY: all clean
+deps:
+	for dep in `cat deps.list`; do echo Installing $$dep; go get $$dep; done
+
+.PHONY: all clean deps
