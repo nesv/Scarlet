@@ -41,8 +41,6 @@ type Configuration struct {
 	Redis RedisBlock `json:redis`
 }
 
-//type Configuration map[string]interface{}
-
 func loadConfig(path string) (config Configuration, err error) {
 	var data []byte
 	data, err = ioutil.ReadFile(path)
@@ -60,6 +58,11 @@ func loadConfig(path string) (config Configuration, err error) {
 		return
 	}
 	err = validateConfig(&config)
+	return
+}
+
+func (c Configuration) HttpAddress() (addr string) {
+	addr = fmt.Sprintf("%s:%d", c.HTTP.ListenAddress, c.HTTP.Port)
 	return
 }
 

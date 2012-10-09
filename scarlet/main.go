@@ -41,6 +41,10 @@ func main() {
 	//
 	redisClient = redis.New(config.Redis.ConnectAddr(), 0, config.Redis.Password)
 
+	if config.HTTP.Enabled {
+		go startHttp(config.HttpAddress())
+	}
+
 	// Start the mainloop (the signal listener)
 	//
 	startSignalListener()
