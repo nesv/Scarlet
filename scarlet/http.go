@@ -53,7 +53,11 @@ func dispatcher(rw http.ResponseWriter, req *http.Request) {
 	key := matches[3]
 	println("Key:", key)
 
+	// Initialize a variable of type R, to hold the response that will
+	// eventually be JSON encoded.
+	//
 	var response R
+	rw.Header().Set("Content-Type", "application/json")
 
 	if len(key) == 0 {
 		if req.Method == "GET" {
@@ -65,11 +69,26 @@ func dispatcher(rw http.ResponseWriter, req *http.Request) {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
+	} else {
+		keyType, err := redisClient.Type(key)
+		if err != nil {
+			response = R{"result": nil, "error": err}
+			fmt.Fprint(rw, response)
+			return
+		}
+		
+		// Format the response according to the type the key holds.
+		//
+		switch keyType {
+		case "string":
+			v, _ := redisClient.Get(key)
+			response = R{"result": v, "error": nil}
+		default:
+			e := fmt.Sprintf("Unknown type: %s", keyType)
+			response = R{"result": nil, "error": e}
+		}
 	}
-
-	// Write out a response
-	//
-	rw.Header().Set("Content-Type", "application/json")
+	
 	fmt.Fprint(rw, response)
 	return
 }
