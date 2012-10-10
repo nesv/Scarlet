@@ -9,7 +9,16 @@ Installing
 You can install Scarlet simply by running the following command (assuming you
 have a Go environment setup):
 
-    go get github.com/nesv/Scarlet/scarlet
+    go get github.com/nesv/Scarlet
+	
+Alternately, if you would like to clone the repository and build it from there,
+the sources also ship with a simple Makefile; all you have to do once you get
+the repository cloned is run:
+
+    make
+	
+...and you will have a `Scarlet` executable in your current directory, that you
+can move around, to wherever.
 	
 Issues?
 -------
