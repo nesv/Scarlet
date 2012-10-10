@@ -26,7 +26,7 @@ const (
 )
 
 func main() {
-	println("Starting scarlet". Version)
+	println("Starting scarlet", Version)
 	flag.Parse()
 	if *debug {
 		println("debug:", "debugging enabled")
