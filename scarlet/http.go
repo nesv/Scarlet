@@ -42,30 +42,8 @@ func httpGetInfo(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	println("INFO")
-	elem, err := redisClient.Info()
-	if err != nil {
-		response = R{"result": nil, "error": err}
-		fmt.Fprint(rw, response)
-	}
-	items := strings.Split(elem.String(), "\r\n")
-	info := make(map[string]string)
-	for i := 0; i < len(items); i++ {
-		if len(items[i]) == 0 {
-			break
-		}
-		opt := strings.Split(items[i], ":")
-		if *debug {
-			println("debug:", opt[0])
-		}
-		if len(opt) > 2 {
-			e := fmt.Sprintf("Info item %s has more than two fields", opt[0])
-			response = R{"result": nil, "error": e}
-			fmt.Fprint(rw, response)
-			return
-		}
-		info[opt[0]] = opt[1]
-	}
-	response = R{"result": info, "error": nil}
+	info, err := GetHostInfo(redisClient)
+	response = R{"result": info, "error": err}
 	fmt.Fprint(rw, response)
 	return
 }
