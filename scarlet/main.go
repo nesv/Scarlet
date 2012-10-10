@@ -21,8 +21,12 @@ var (
 	systemSignals = make(chan os.Signal)
 )
 
+const (
+	Version = "0.1.0"
+)
+
 func main() {
-	println("Starting scarlet")
+	println("Starting scarlet". Version)
 	flag.Parse()
 	if *debug {
 		println("debug:", "debugging enabled")
