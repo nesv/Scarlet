@@ -5,15 +5,15 @@
 package main
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 var (
-	urlRegex = regexp.MustCompile("^/([0-9]{1,2})(/(.+))?(/(ttl|type))?")
+	urlRegex         = regexp.MustCompile("^/([0-9]{1,2})(/(.+))?(/(ttl|type))?")
 	querystringRegex = regexp.MustCompile(`(\?.*)$`)
 )
 
@@ -112,7 +112,7 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 		fmt.Fprint(rw, response)
 		return
 	}
-	
+
 	// Format the response according to the type the key holds.
 	//
 	switch keyType {
@@ -120,12 +120,12 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 		println("GET", key)
 		v, _ := redisClient.Get(key)
 		response = R{"result": v, "error": nil}
-		
+
 	case "set":
 		println("SMEMBERS", key)
 		v, _ := redisClient.Smembers(key)
 		response = R{"result": v.StringArray(), "error": nil}
-		
+
 	case "zset":
 		println("ZRANGE", key, 0, -1)
 		v, _ := redisClient.Zrange(key, 0, -1)
@@ -146,12 +146,12 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 			reply, _ := redisClient.Hgetall(key)
 			response = R{"result": reply.StringMap(), "error": nil}
 		}
-		
+
 	default:
 		e := fmt.Sprintf("Unknown type for key %s: %s", key, keyType)
 		response = R{"result": nil, "error": e}
 	}
-	
+
 	fmt.Fprint(rw, response)
 	return
 }

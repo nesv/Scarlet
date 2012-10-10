@@ -6,9 +6,9 @@ package main
 
 import (
 	"github.com/simonz05/godis/redis"
-	"strings"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -16,9 +16,9 @@ var (
 )
 
 type ConnectionMap struct {
-	netaddr string
-	password string 
-	client *redis.Client
+	netaddr     string
+	password    string
+	client      *redis.Client
 	connections map[int]*redis.Client
 }
 

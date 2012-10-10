@@ -6,18 +6,18 @@ package main
 
 import (
 	"flag"
+	"github.com/simonz05/godis/redis"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/simonz05/godis/redis"
 )
 
 var (
-	configPath = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
-	debug = flag.Bool("d", false, "Enable debugging")
-	config *Configuration
-	redisClient *redis.Client
-	Database *ConnectionMap
+	configPath    = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
+	debug         = flag.Bool("d", false, "Enable debugging")
+	config        *Configuration
+	redisClient   *redis.Client
+	Database      *ConnectionMap
 	systemSignals = make(chan os.Signal)
 )
 
@@ -31,7 +31,7 @@ func main() {
 	if *debug {
 		println("debug:", "debugging enabled")
 	}
-	
+
 	// Load the configuration
 	//
 	if *debug {
@@ -44,12 +44,12 @@ func main() {
 	if config.Redis.InfoDisabled() {
 		println("Retrieving node information is disabled")
 	}
-	
+
 	// Connect to the initial Redis host
 	//
 	redisClient = redis.New(config.Redis.ConnectAddr(), 0, config.Redis.Password)
 	defer redisClient.Quit()
-	
+
 	// Get some information from the Redis host, and populate connections
 	// for the databases on the host.
 	//

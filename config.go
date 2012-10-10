@@ -5,25 +5,25 @@
 package main
 
 import (
-	"io/ioutil"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 )
 
 type ServerBlock struct {
-	Enabled bool `json:enabled`
+	Enabled       bool   `json:enabled`
 	ListenAddress string `json:listenAddress`
-	Port int `json:port`
+	Port          int    `json:port`
 }
 
 type RedisBlock struct {
-	Protocol string "protocol"
-	Host string `json:host`
-	Port int `json:port`
-	PropagateWrites bool `json:propagateWritesToMaster`
-	Password string `json:password`
-	DisableInfo bool `json:disableInfo`
+	Protocol        string "protocol"
+	Host            string `json:host`
+	Port            int    `json:port`
+	PropagateWrites bool   `json:propagateWritesToMaster`
+	Password        string `json:password`
+	DisableInfo     bool   `json:disableInfo`
 }
 
 func (r RedisBlock) InfoDisabled() (p bool) {
@@ -40,11 +40,10 @@ func (r RedisBlock) ConnectAddr() (addr string) {
 	return
 }
 
-
 type Configuration struct {
-	HTTP ServerBlock `json:http`
-	TCP ServerBlock `json:tcp`
-	Redis RedisBlock `json:redis`
+	HTTP  ServerBlock `json:http`
+	TCP   ServerBlock `json:tcp`
+	Redis RedisBlock  `json:redis`
 }
 
 func LoadConfig(path string) (config *Configuration, err error) {
@@ -58,7 +57,7 @@ func LoadConfig(path string) (config *Configuration, err error) {
 	if err != nil {
 		return
 	}
-	
+
 	var c Configuration
 	err = json.Unmarshal(data, &c)
 	if err != nil {
