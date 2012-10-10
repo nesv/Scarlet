@@ -1,6 +1,6 @@
 all: scarletd
 
-scarletd: $(wildcard scarlet/*.go)
+scarletd: $(wildcard *.go)
 	go build -o $@ $^
 
 clean:
