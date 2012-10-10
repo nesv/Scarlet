@@ -41,6 +41,8 @@ func main() {
 	//
 	redisClient = redis.New(config.Redis.ConnectAddr(), 0, config.Redis.Password)
 
+	// If the HTTP server was enabled in the configuration, start it.
+	//
 	if config.HTTP.Enabled {
 		go startHttp(config.HttpAddress())
 	}

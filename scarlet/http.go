@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strings"
 	"strconv"
-	"encoding/json"
 )
 
 var (
@@ -80,19 +79,12 @@ func favicon(rw http.ResponseWriter, req *http.Request) {
 	return
 }
 
-type R map[string]interface{}
-
-func (r R) String() (s string) {
-	b, err := json.Marshal(r)
+func listKeys(db int) (resp R) {
+	keys, err := redisClient.Keys("*")
 	if err != nil {
-		s = ""
+		resp = R{"result": nil, "error": err}
 		return
 	}
-	s = string(b)
-	return
-}
-
-func listKeys(db int) (resp R) {
-	resp = R{"result": R{}, "error": nil}
+	resp = R{"result": keys, "error": nil}
 	return
 }
