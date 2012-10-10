@@ -31,9 +31,16 @@ func startHttp(listenAddr string) {
 }
 
 func httpGetInfo(rw http.ResponseWriter, req *http.Request) {
-	println("INFO")
 	rw.Header().Set("Content-Type", "application/json")
 	var response R
+	config, _ := loadConfig(*configPath)
+	if config.Redis.InfoDisabled() {
+		e := "Retrieving node information has been disabled."
+		response = R{"result": nil, "error": e}
+		fmt.Fprint(rw, response)
+		return
+	}
+	println("INFO")
 	elem, err := redisClient.Info()
 	if err != nil {
 		response = R{"result": nil, "error": err}

@@ -36,6 +36,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	if config.Redis.InfoDisabled() {
+		println("Retrieving node information is disabled")
+	}
 
 	// Connect to the initial Redis host
 	//

@@ -23,6 +23,12 @@ type RedisBlock struct {
 	Port int `json:port`
 	PropagateWrites bool `json:propagateWritesToMaster`
 	Password string `json:password`
+	DisableInfo bool `json:disableInfo`
+}
+
+func (r RedisBlock) InfoDisabled() (p bool) {
+	p = r.DisableInfo
+	return
 }
 
 func (r RedisBlock) ConnectAddr() (addr string) {
