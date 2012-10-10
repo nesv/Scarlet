@@ -14,6 +14,7 @@ import (
 
 var (
 	urlRegex = regexp.MustCompile("^/([0-9]{1,2})(/(.+))?(/(ttl|type))?")
+	querystringRegex = regexp.MustCompile(`(\?.*)$`)
 )
 
 func startHttp(listenAddr string) {
@@ -70,7 +71,8 @@ func httpGetInfo(rw http.ResponseWriter, req *http.Request) {
 }
 
 func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
-	matches := urlRegex.FindStringSubmatch(req.URL.String())
+	url := querystringRegex.ReplaceAllString(req.URL.String(), "")
+	matches := urlRegex.FindStringSubmatch(url)
 	if matches == nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(rw, ":(")
@@ -93,7 +95,9 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 	// Parse out the key name
 	//
 	key := matches[3]
-	println("Key:", key)
+	if *debug {
+		println("Key:", key)
+	}
 
 	// Initialize a variable of type R, to hold the response that will
 	// eventually be JSON encoded.
@@ -153,6 +157,17 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 		println("LRANGE", key, 0, -1)
 		v, _ := redisClient.Lrange(key, 0, -1)
 		response = R{"result": v.StringArray(), "error": nil}
+
+	case "hash":
+		if field := req.FormValue("field"); field != "" {
+			println("HGET", key, field)
+			v, _ := redisClient.Hget(key, field)
+			response = R{"result": v.String(), "error": nil}
+		} else {
+			println("HGETALL", key)
+			reply, _ := redisClient.Hgetall(key)
+			response = R{"result": reply.StringMap(), "error": nil}
+		}
 		
 	default:
 		e := fmt.Sprintf("Unknown type for key %s: %s", key, keyType)
