@@ -19,8 +19,9 @@ var (
 func startHttp(listenAddr string) {
 	// URL-to-handler func mappings
 	//
-	http.HandleFunc("/", dispatcher)
-	http.HandleFunc("/favicon.ico", favicon)
+	http.HandleFunc("/info", httpGetInfo)
+	http.HandleFunc("/favicon.ico", httpFavicon)
+	http.HandleFunc("/", httpDispatcher)
 
 	// Start listening for requests
 	//
@@ -29,7 +30,39 @@ func startHttp(listenAddr string) {
 	return
 }
 
-func dispatcher(rw http.ResponseWriter, req *http.Request) {
+func httpGetInfo(rw http.ResponseWriter, req *http.Request) {
+	println("INFO")
+	rw.Header().Set("Content-Type", "application/json")
+	var response R
+	elem, err := redisClient.Info()
+	if err != nil {
+		response = R{"result": nil, "error": err}
+		fmt.Fprint(rw, response)
+	}
+	items := strings.Split(elem.String(), "\r\n")
+	info := make(map[string]string)
+	for i := 0; i < len(items); i++ {
+		if len(items[i]) == 0 {
+			break
+		}
+		opt := strings.Split(items[i], ":")
+		if *debug {
+			println("debug:", opt[0])
+		}
+		if len(opt) > 2 {
+			e := fmt.Sprintf("Info item %s has more than two fields", opt[0])
+			response = R{"result": nil, "error": e}
+			fmt.Fprint(rw, response)
+			return
+		}
+		info[opt[0]] = opt[1]
+	}
+	response = R{"result": info, "error": nil}
+	fmt.Fprint(rw, response)
+	return
+}
+
+func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 	matches := urlRegex.FindStringSubmatch(req.URL.String())
 	if matches == nil {
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -46,7 +79,9 @@ func dispatcher(rw http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(rw, err)
 		return
 	}
-	println("DB #:", dbnum)
+	if *debug {
+		println("debug:", "DB #", dbnum)
+	}
 
 	// Parse out the key name
 	//
@@ -64,46 +99,64 @@ func dispatcher(rw http.ResponseWriter, req *http.Request) {
 			// The length of the key name is zero, so just list all
 			// of the keys in the database.
 			//
-			response = listKeys(dbnum)
-		} else {
-			rw.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-	} else {
-		keyType, err := redisClient.Type(key)
-		if err != nil {
-			response = R{"result": nil, "error": err}
+			println("KEYS", "*")
+			keys, err := redisClient.Keys("*")
+			if err != nil {
+				response = R{"result": nil, "error": err}
+			} else {
+				response = R{"result": keys, "error": nil}
+			}
 			fmt.Fprint(rw, response)
 			return
+		} else {
+			rw.WriteHeader(http.StatusMethodNotAllowed)
 		}
+		return
+	}
+
+	// Get the key type, so that we know how to properly format the
+	// response.
+	//
+	keyType, err := redisClient.Type(key)
+	if err != nil {
+		response = R{"result": nil, "error": err}
+		fmt.Fprint(rw, response)
+		return
+	}
+	
+	// Format the response according to the type the key holds.
+	//
+	switch keyType {
+	case "string":
+		println("GET", key)
+		v, _ := redisClient.Get(key)
+		response = R{"result": v, "error": nil}
 		
-		// Format the response according to the type the key holds.
-		//
-		switch keyType {
-		case "string":
-			v, _ := redisClient.Get(key)
-			response = R{"result": v, "error": nil}
-		default:
-			e := fmt.Sprintf("Unknown type: %s", keyType)
-			response = R{"result": nil, "error": e}
-		}
+	case "set":
+		println("SMEMBERS", key)
+		v, _ := redisClient.Smembers(key)
+		response = R{"result": v.StringArray(), "error": nil}
+		
+	case "zset":
+		println("ZRANGE", key, 0, -1)
+		v, _ := redisClient.Zrange(key, 0, -1)
+		response = R{"result": v.StringArray(), "error": nil}
+
+	case "list":
+		println("LRANGE", key, 0, -1)
+		v, _ := redisClient.Lrange(key, 0, -1)
+		response = R{"result": v.StringArray(), "error": nil}
+		
+	default:
+		e := fmt.Sprintf("Unknown type for key %s: %s", key, keyType)
+		response = R{"result": nil, "error": e}
 	}
 	
 	fmt.Fprint(rw, response)
 	return
 }
 
-func favicon(rw http.ResponseWriter, req *http.Request) {
+func httpFavicon(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
-	return
-}
-
-func listKeys(db int) (resp R) {
-	keys, err := redisClient.Keys("*")
-	if err != nil {
-		resp = R{"result": nil, "error": err}
-		return
-	}
-	resp = R{"result": keys, "error": nil}
 	return
 }
