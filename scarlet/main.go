@@ -15,7 +15,7 @@ import (
 var (
 	configPath = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
 	debug = flag.Bool("d", false, "Enable debugging")
-	config Configuration
+	config *Configuration
 	redisClient *redis.Client
 	systemSignals = make(chan os.Signal)
 )
@@ -32,7 +32,7 @@ func main() {
 	if *debug {
 		println("debug:", "using configuration file", *configPath)
 	}
-	config, err := loadConfig(*configPath)
+	config, err := LoadConfig(*configPath)
 	if err != nil {
 		panic(err)
 	}

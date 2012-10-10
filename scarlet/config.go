@@ -47,7 +47,7 @@ type Configuration struct {
 	Redis RedisBlock `json:redis`
 }
 
-func loadConfig(path string) (config Configuration, err error) {
+func LoadConfig(path string) (config *Configuration, err error) {
 	var data []byte
 	data, err = ioutil.ReadFile(path)
 
@@ -59,20 +59,21 @@ func loadConfig(path string) (config Configuration, err error) {
 		return
 	}
 	
-	err = json.Unmarshal(data, &config)
+	var c Configuration
+	err = json.Unmarshal(data, &c)
 	if err != nil {
 		return
 	}
-	err = validateConfig(&config)
+	config = &c
 	return
 }
 
-func (c Configuration) HttpAddress() (addr string) {
+func (c *Configuration) HttpAddress() (addr string) {
 	addr = fmt.Sprintf("%s:%d", c.HTTP.ListenAddress, c.HTTP.Port)
 	return
 }
 
-func validateConfig(conf *Configuration) (err error) {
+func (conf *Configuration) Validate() (err error) {
 	// Validate the value set for the Redis protocol.
 	//
 	if conf.Redis.Protocol != "unix" && conf.Redis.Protocol != "tcp" {

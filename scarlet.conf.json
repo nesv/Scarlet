@@ -16,6 +16,6 @@
 	"host": "localhost",
 	"port": 6379,
 	"propagateWritesToMaster": false,
-	"disableInfo": true
+	"disableInfo": false
     }
 }
