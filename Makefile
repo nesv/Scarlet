@@ -4,7 +4,7 @@ scarletd: $(wildcard scarlet/*.go)
 	go build -o $@ $^
 
 clean:
-	rm scarletd
+	rm -f scarletd
 	find . -iname "*~" -exec rm -f {} \;
 
 deps:
