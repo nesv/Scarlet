@@ -1,10 +1,12 @@
-all: scarletd
+EXE = Scarlet
 
-scarletd: $(wildcard *.go)
+all: $(EXE)
+
+$(EXE): $(wildcard *.go)
 	go build -o $@ $^
 
 clean:
-	rm -f scarletd
+	rm -f $(EXE)
 	find . -iname "*~" -exec rm -f {} \;
 
 deps:
