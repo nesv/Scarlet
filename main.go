@@ -13,6 +13,7 @@ import (
 )
 
 var (
+	ListenAddress = flag.String("a", ":6380", "The address Scarlet should listen on.")
 	configPath    = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
 	debug         = flag.Bool("d", false, "Enable debugging")
 	config        *Configuration
