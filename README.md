@@ -36,3 +36,10 @@ Copying & contributing
 ----------------------
 
 See the LICENSE.
+
+Current version & Changelog
+---------------------------
+
+*0.0.1*
+*	The first development release.
+*	You can use HTTP GET requests to fetch values from keys.
