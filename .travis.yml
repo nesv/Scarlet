@@ -2,3 +2,5 @@ language: go
 
 install:
 	- go get github.com/simonz05/godis/redis
+
+script: make
