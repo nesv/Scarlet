@@ -20,9 +20,9 @@ var (
 func startHttp(listenAddr string) {
 	// URL-to-handler func mappings
 	//
-	http.HandleFunc("/info", httpGetInfo)
-	http.HandleFunc("/favicon.ico", httpFavicon)
-	http.HandleFunc("/", httpDispatcher)
+	http.HandleFunc("/info", GetInformation)
+	http.HandleFunc("/favicon.ico", Favicon)
+	http.HandleFunc("/", DispatchRequest)
 
 	// Start listening for requests
 	//
@@ -31,7 +31,7 @@ func startHttp(listenAddr string) {
 	return
 }
 
-func httpGetInfo(rw http.ResponseWriter, req *http.Request) {
+func GetInformation(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	var response R
 	config, _ := LoadConfig(*configPath)
@@ -48,13 +48,33 @@ func httpGetInfo(rw http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
+// Dispatches the incoming request to the proper action handler, depending on 
+// the HTTP method that was used.
+//
+func DispatchRequest(rw http.ResponseWriter, req *http.Request) {
+	var response R
+	switch req.Method {
+	case "GET":
+		response = HandleReadOperation(req)
+
+	case "POST":
+		response = HandleCreateOperation(req)
+
+	case "PUT":
+		response = HandleUpdateOperation(req)
+	}
+	rw.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(rw, response)
+	return
+}
+
+// Handles HTTP GET requests, which are intended for retrieving data.
+//
+func HandleReadOperation(req *http.Request) (response R) {
 	url := querystringRegex.ReplaceAllString(req.URL.String(), "")
 	matches := urlRegex.FindStringSubmatch(url)
 	if matches == nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Content-Type", "text/html")
-		fmt.Fprintln(rw, "<html><body><h1>:(</h1></body></html>")
+		response = R{"result": nil, "error": "No database number specified."}
 		return
 	}
 
@@ -63,43 +83,30 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 	db := matches[1]
 	dbnum, err := strconv.Atoi(strings.TrimLeft(db, "/"))
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(rw, err)
+		response = R{"result": nil, "error": err}
 		return
 	}
 	if *debug {
 		println("debug:", "DB #", dbnum)
 	}
 
+	// Get a Redis client for the specified database number.
+	//
+	client := Database.DB(dbnum)
+
 	// Parse out the key name
 	//
 	key := matches[3]
-	if *debug {
-		println("Key:", key)
-	}
-
-	// Initialize a variable of type R, to hold the response that will
-	// eventually be JSON encoded.
-	//
-	var response R
-	rw.Header().Set("Content-Type", "application/json")
-
 	if len(key) == 0 {
-		if req.Method == "GET" {
-			// The length of the key name is zero, so just list all
-			// of the keys in the database.
-			//
-			println("KEYS", "*")
-			keys, err := redisClient.Keys("*")
-			if err != nil {
-				response = R{"result": nil, "error": err}
-			} else {
-				response = R{"result": keys, "error": nil}
-			}
-			fmt.Fprint(rw, response)
-			return
+		// The length of the key name is zero, so just list all
+		// of the keys in the database.
+		//
+		fmt.Println("KEYS", "*")
+		keys, err := client.Keys("*")
+		if err != nil {
+			response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		} else {
-			rw.WriteHeader(http.StatusMethodNotAllowed)
+			response = R{"result": keys, "error": nil}
 		}
 		return
 	}
@@ -107,10 +114,9 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 	// Get the key type, so that we know how to properly format the
 	// response.
 	//
-	keyType, err := redisClient.Type(key)
+	keyType, err := client.Type(key)
 	if err != nil {
 		response = R{"result": nil, "error": err}
-		fmt.Fprint(rw, response)
 		return
 	}
 
@@ -119,32 +125,32 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 	switch keyType {
 	case "string":
 		println("GET", key)
-		v, _ := redisClient.Get(key)
+		v, _ := client.Get(key)
 		response = R{"result": v, "error": nil}
 
 	case "set":
 		println("SMEMBERS", key)
-		v, _ := redisClient.Smembers(key)
+		v, _ := client.Smembers(key)
 		response = R{"result": v.StringArray(), "error": nil}
 
 	case "zset":
 		println("ZRANGE", key, 0, -1)
-		v, _ := redisClient.Zrange(key, 0, -1)
+		v, _ := client.Zrange(key, 0, -1)
 		response = R{"result": v.StringArray(), "error": nil}
 
 	case "list":
 		println("LRANGE", key, 0, -1)
-		v, _ := redisClient.Lrange(key, 0, -1)
+		v, _ := client.Lrange(key, 0, -1)
 		response = R{"result": v.StringArray(), "error": nil}
 
 	case "hash":
 		if field := req.FormValue("field"); field != "" {
 			println("HGET", key, field)
-			v, _ := redisClient.Hget(key, field)
+			v, _ := client.Hget(key, field)
 			response = R{"result": v.String(), "error": nil}
 		} else {
 			println("HGETALL", key)
-			reply, _ := redisClient.Hgetall(key)
+			reply, _ := client.Hgetall(key)
 			response = R{"result": reply.StringMap(), "error": nil}
 		}
 
@@ -152,12 +158,26 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 		e := fmt.Sprintf("Unknown type for key %s: %s", key, keyType)
 		response = R{"result": nil, "error": e}
 	}
-
-	fmt.Fprint(rw, response)
 	return
 }
 
-func httpFavicon(rw http.ResponseWriter, req *http.Request) {
+// Handles HTTP POST requests, intended for creating new keys.
+//
+func HandleCreateOperation(req *http.Request) (response R) {
+	e := "Create operations have not yet been implemented."
+	response = R{"result": nil, "error": e}
+	return
+}
+
+// Handles HTTP PUT requests, inteded for updating keys.
+//
+func HandleUpdateOperation(req *http.Request) (response R) {
+	e := "Update operations have not yet been implemented."
+	response = R{"result": nil, "error": e}
+	return
+}
+
+func Favicon(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	return
 }

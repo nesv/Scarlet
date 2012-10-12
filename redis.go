@@ -41,6 +41,34 @@ func (c *ConnectionMap) Add(db int, rc *redis.Client) {
 	return
 }
 
+// Returns the appropriate Redis client for the database number provided. If
+// there is no client for that database number, then this function will create
+// it, and return it.
+//
+func (c *ConnectionMap) DB(db int) (r *redis.Client) {
+	client, existsp := c.connections[db]
+	if existsp {
+		// Yay, we already have a client established to that database!
+		//
+		r = client
+		return
+	}
+
+	// Urg, it looks like this is the first time anything has been requested
+	// regarding this database. Let's establish a new connection to it, and
+	// save it for later.
+	//
+	// ...then return it (because we're nice like that).
+	//
+	if *debug {
+		println("DEBUG", "Creating new Redis connection to DB #", db)
+	}
+	client = redis.New(c.netaddr, db, c.password)
+	c.Add(db, client)
+	r = client
+	return
+}
+
 // Populates connections to any database. on the Redis host the ConnectionMap
 // was initialized with, that holds data.
 //
