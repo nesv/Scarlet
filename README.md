@@ -36,9 +36,11 @@ then you will be added to the list of contributors.
 
 See the LICENSE.
 
-## Travis CI build status
+## Build statuses
 
-[![Build Status](https://secure.travis-ci.org/nesv/Scarlet.png)](http://travis-ci.org/nesv/Scarlet)
+[Travis CI](http://travis-ci.org): [![Build Status](https://secure.travis-ci.org/nesv/Scarlet.png)](http://travis-ci.org/nesv/Scarlet)
+
+[Drone.io](https://drone.io): [![](https://drone.io/nesv/Scarlet/status.png)](https://drone.io/nesv/Scarlet/latest)
 
 ## Changelog
 
