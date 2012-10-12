@@ -1,10 +1,8 @@
-Scarlet
-=======
+# Scarlet
 
 An HTTP frontend, for Redis.
 
-Installing
-----------
+## Installing
 
 You can install Scarlet simply by running the following command (assuming you
 have a Go environment setup):
@@ -20,25 +18,32 @@ the repository cloned is run:
 ...and you will have a `Scarlet` executable in your current directory, that you
 can move around, to wherever.
 	
-Issues?
--------
+## Issues?
 
 If you experience any issues, please create an issue [here](https://github.com/nesv/Scarlet/issues),
 on Github.
 
-Helping out
------------
+## Development
 
-If you would like to help out with developing Scarlet, cool!
+If you would like to help out with developing Scarlet, that would be awesome!
+
+The first thing to do, would be to fork this repository, do something important
+and/or cool, then submit a pull request. If your work is good, and consistent,
+then you will be added to the list of contributors.
 
 
-Copying & contributing
-----------------------
+## Copying & contributing
 
 See the LICENSE.
 
-Current version & Changelog
----------------------------
+## Travis CI build status
+
+[![Build Status](https://secure.travis-ci.org/nesv/Scarlet.png)](http://travis-ci.org/nesv/Scarlet)
+
+## Changelog
+
+*0.0.2*
+*	A minor change involving the .travis.yml file.
 
 *0.0.1*
 *	The first development release.
