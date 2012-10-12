@@ -1,10 +1,15 @@
-all: scarletd
+EXE = Scarlet
 
-scarletd: $(wildcard scarlet/*.go)
+all: $(EXE)
+
+$(EXE): $(wildcard *.go)
 	go build -o $@ $^
 
 clean:
-	rm scarletd
+	rm -f $(EXE)
 	find . -iname "*~" -exec rm -f {} \;
 
-.PHONY: all clean
+deps:
+	for dep in `cat deps.list`; do echo Installing $$dep; go get $$dep; done
+
+.PHONY: all clean deps

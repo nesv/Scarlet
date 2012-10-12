@@ -1,23 +1,45 @@
 Scarlet
 =======
 
-An HTTP frontend, and clustering solution for Redis.
+An HTTP frontend, for Redis.
 
-What can she do?
-----------------
+Installing
+----------
 
-Scarlet's a modest lady (and a bit rough around the edges) but she does the
-following:
+You can install Scarlet simply by running the following command (assuming you
+have a Go environment setup):
 
-*	Provides a REST-like HTTP interface to Redis
-*	Provides a clustering solution, complete with management interface
+    go get github.com/nesv/Scarlet
+	
+Alternately, if you would like to clone the repository and build it from there,
+the sources also ship with a simple Makefile; all you have to do once you get
+the repository cloned is run:
 
-Configuration
--------------
+    make
+	
+...and you will have a `Scarlet` executable in your current directory, that you
+can move around, to wherever.
+	
+Issues?
+-------
 
-*describe Scarlet's JSON configuration*
+If you experience any issues, please create an issue [here](https://github.com/nesv/Scarlet/issues),
+on Github.
+
+Helping out
+-----------
+
+If you would like to help out with developing Scarlet, cool!
+
 
 Copying & contributing
 ----------------------
 
-See the [license](LICENSE.md).
+See the LICENSE.
+
+Current version & Changelog
+---------------------------
+
+*0.0.1*
+*	The first development release.
+*	You can use HTTP GET requests to fetch values from keys.
