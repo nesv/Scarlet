@@ -53,7 +53,8 @@ func httpDispatcher(rw http.ResponseWriter, req *http.Request) {
 	matches := urlRegex.FindStringSubmatch(url)
 	if matches == nil {
 		rw.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(rw, ":(")
+		rw.Header().Set("Content-Type", "text/html")
+		fmt.Fprintln(rw, "<html><body><h1>:(</h1></body></html>")
 		return
 	}
 
