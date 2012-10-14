@@ -226,20 +226,29 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 				if err != nil {
 					errors = append(errors, fmt.Sprintf("%s", err))
 				} else {
-					err = client.Setrange(info.Key, offset, val)
-					fmt.Println("SETRANGE", info.Key, offset, val)
+					_, err = client.Setrange(info.Key, i, val)
+					fmt.Println("SETRANGE", info.Key, i, val)
 				}
 			}
 			err = client.Set(info.Key, val)
 			fmt.Println("SET", info.Key, val)
 
 		case "set":
-			err = client.Sadd(info.Key, val)
+			_, err = client.Sadd(info.Key, val)
 			fmt.Println("SADD", info.Key, val)
 
 		case "zset":
-			err = client.Zadd(info.Key, val)
-			fmt.Println("ZADD", info.Key, val)
+			var ranking float64 = 1.0
+			if v := req.FormValue("ranking"); len(v) > 0 {
+				f, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("%s", err))
+				} else {
+					ranking = f
+				}
+			}
+			_, err = client.Zadd(info.Key, ranking, val)
+			fmt.Println("ZADD", info.Key, ranking, val)
 
 		case "hash":
 			field := req.FormValue("field")
@@ -248,20 +257,20 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 				response = R{"result": nil, "error": e}
 				return
 			}
-			err = client.Hset(info.Key, field, val)
+			_, err = client.Hset(info.Key, field, val)
 			fmt.Println("HSET", info.Key, field, val)
 
 		case "list":
 			side := "right"
 			if req.FormValue("side") == "left" {
-				side := "left"
+				side = "left"
 			}
 
 			if side == "left" {
-				err = client.Lpush(info.Key, val)
+				_, err = client.Lpush(info.Key, val)
 				fmt.Println("LPUSH", info.Key, val)
 			} else {
-				err = client.Rpush(info.Key, val)
+				_, err = client.Rpush(info.Key, val)
 				fmt.Println("RPUSH", info.Key, val)
 			}
 		}
