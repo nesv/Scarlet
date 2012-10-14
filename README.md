@@ -44,6 +44,9 @@ See the LICENSE.
 
 ## Changelog
 
+*0.0.3*
+*	You can now use HTTP PUT requests to update existing keys.
+
 *0.0.2*
 *	A minor change involving the .travis.yml file.
 
