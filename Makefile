@@ -10,6 +10,6 @@ clean:
 	find . -iname "*~" -exec rm -f {} \;
 
 deps:
-	for dep in `cat deps.list`; do echo Installing $$dep; go get $$dep; done
+	go get github.com/simonz05/godis/redis
 
 .PHONY: all clean deps
