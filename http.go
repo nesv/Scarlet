@@ -133,7 +133,7 @@ func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 	case "string":
 		println("GET", key)
 		v, _ := client.Get(key)
-		response = R{"result": v, "error": nil}
+		response = R{"result": v.String(), "error": nil}
 
 	case "set":
 		println("SMEMBERS", key)
