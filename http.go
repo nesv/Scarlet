@@ -230,7 +230,7 @@ func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
 	//
 	switch keytype {
 	case "string":
-		_, err = client.Set(info.Key, value)
+		err = client.Set(info.Key, value)
 
 	case "list":
 		_, err = client.Lpush(info.Key, value)
@@ -252,7 +252,7 @@ func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
 		_, err = client.Zadd(info.Key, ranking, value)
 
 	case "hash":
-		if field := req.FormValue("field"); len(f) > 0 {
+		if field := req.FormValue("field"); len(field) > 0 {
 			_, err = client.Hset(info.Key, field, value)
 		} else {
 			err = errors.New("No field name specified.")
