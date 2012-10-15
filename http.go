@@ -161,6 +161,9 @@ func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 			response = R{"result": reply.StringMap(), "error": nil}
 		}
 
+	case "none":
+		response = R{"result": nil, "error": "Key does not exist."}
+
 	default:
 		e := fmt.Sprintf("Unknown type for key %s: %s", key, keyType)
 		response = R{"result": nil, "error": e}
