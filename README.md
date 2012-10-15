@@ -44,6 +44,9 @@ See the LICENSE.
 
 ## Changelog
 
+*0.0.4*
+*	You can now create keys using the HTTP POST method.
+
 *0.0.3*
 *	You can now use HTTP PUT requests to update existing keys.
 
