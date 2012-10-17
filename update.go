@@ -2,7 +2,10 @@
 //
 package main
 
-import "net/http"
+import (
+	"net/http"
+	"fmt"
+)
 
 // Handles HTTP PUT requests, inteded for updating keys.
 //

@@ -2,7 +2,10 @@
 //
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 // Handles HTTP POST requests, intended for creating new keys.
 //

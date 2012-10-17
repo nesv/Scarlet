@@ -4,6 +4,7 @@ package main
 
 import (
 	"net/http"
+	"fmt"
 )
 
 // Handles HTTP GET requests, which are intended for retrieving data.
