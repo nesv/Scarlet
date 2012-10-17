@@ -44,10 +44,12 @@ See the LICENSE.
 
 ## Changelog
 
-*0.0.5*
+*0.5.0*
 *	Fixed a bug where non-existent keys returned type "none", and the error
 	in the response said it was an "unknown key type". The error is now 
 	reported properly.
+*	Errors on create operations (through HTTP POST) are now displaying 
+	properly.
 
 *0.0.4*
 *	You can now create keys using the HTTP POST method.
