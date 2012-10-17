@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"errors"
@@ -103,7 +104,7 @@ func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
 	// error.
 	//
 	if err != nil {
-		response = R{"result": nil, "error": err}
+		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 	} else {
 		response = R{"result": true, "error": nil}
 	}
