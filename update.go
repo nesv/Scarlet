@@ -5,6 +5,8 @@ package main
 import (
 	"net/http"
 	"fmt"
+	"strings"
+	"strconv"
 )
 
 // Handles HTTP PUT requests, inteded for updating keys.

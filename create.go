@@ -3,8 +3,9 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
+	"errors"
 )
 
 // Handles HTTP POST requests, intended for creating new keys.
