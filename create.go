@@ -15,7 +15,7 @@ func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
 	client := Database.DB(info.DbNum)
 	existsp, err := client.Exists(info.Key)
 	if err != nil {
-		response = R{"result": nil, "error": err}
+		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		return
 	}
 
