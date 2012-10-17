@@ -8,4 +8,5 @@ import (
 
 func HandleDeleteOperation(req *http.Request, info *RequestInfo) (response R) {
 	response = R{"result": nil, "error": "Not implemented."}
+	return
 }
