@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Scarlet by nesv</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Scarlet</h1>
+        <p>An HTTP frontend for Redis</p>
+
+        <p class="view"><a href="https://github.com/nesv/Scarlet">View the Project on GitHub <small>nesv/Scarlet</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/nesv/Scarlet/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/nesv/Scarlet/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/nesv/Scarlet">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Scarlet</h1>
+
+<p>An HTTP frontend, for Redis.</p>
+
+<h2>Installing</h2>
+
+<p>You can install Scarlet simply by running the following command (assuming you
+have a Go environment setup):</p>
+
+<pre><code>go get github.com/nesv/Scarlet
+</code></pre>
+
+<p>Alternately, if you would like to clone the repository and build it from there,
+the sources also ship with a simple Makefile; all you have to do once you get
+the repository cloned is run:</p>
+
+<pre><code>make
+</code></pre>
+
+<p>...and you will have a <code>Scarlet</code> executable in your current directory, that you
+can move around, to wherever.</p>
+
+<h2>Issues?</h2>
+
+<p>If you experience any issues, please create an issue <a href="https://github.com/nesv/Scarlet/issues">here</a>,
+on Github.</p>
+
+<h2>Development</h2>
+
+<p>If you would like to help out with developing Scarlet, that would be awesome!</p>
+
+<p>The first thing to do, would be to fork this repository, do something important
+and/or cool, then submit a pull request. If your work is good, and consistent,
+then you will be added to the list of contributors.</p>
+
+<h2>Copying &amp; contributing</h2>
+
+<p>See the LICENSE.</p>
+
+<h2>Build statuses</h2>
+
+<p><a href="http://travis-ci.org">Travis CI</a>: <a href="http://travis-ci.org/nesv/Scarlet"><img src="https://secure.travis-ci.org/nesv/Scarlet.png" alt="Build Status"></a></p>
+
+<p><a href="https://drone.io">Drone.io</a>: <a href="https://drone.io/nesv/Scarlet/latest"><img src="https://drone.io/nesv/Scarlet/status.png" alt=""></a></p>
+
+<h2>Changelog</h2>
+
+<p><em>0.5.0</em></p>
+
+<ul>
+<li>  Fixed a bug where non-existent keys returned type "none", and the error
+in the response said it was an "unknown key type". The error is now 
+reported properly.</li>
+<li>  Errors on create operations (through HTTP POST) are now displaying 
+properly.</li>
+<li>  HTTP DELETE operations are now supported</li>
+</ul><p><em>0.0.4</em></p>
+
+<ul>
+<li>  You can now create keys using the HTTP POST method.</li>
+</ul><p><em>0.0.3</em></p>
+
+<ul>
+<li>  You can now use HTTP PUT requests to update existing keys.</li>
+</ul><p><em>0.0.2</em></p>
+
+<ul>
+<li>  A minor change involving the .travis.yml file.</li>
+</ul><p><em>0.0.1</em></p>
+
+<ul>
+<li>  The first development release.</li>
+<li>  You can use HTTP GET requests to fetch values from keys.</li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/nesv">nesv</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
