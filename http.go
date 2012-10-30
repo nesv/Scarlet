@@ -83,6 +83,9 @@ func DispatchRequest(rw http.ResponseWriter, req *http.Request) {
 
 		case "PUT":
 			response = HandleUpdateOperation(req, info)
+
+		case "DELETE":
+			response = HandleDeleteOperation(req, info)
 		}
 	} else {
 		response = R{"result": nil, "error": err}
