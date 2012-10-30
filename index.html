@@ -63,6 +63,39 @@ on Github.</p>
 and/or cool, then submit a pull request. If your work is good, and consistent,
 then you will be added to the list of contributors.</p>
 
+<h2>Future planning</h2>
+
+<h3>Clustering &amp; Replication</h3>
+<p>
+  One of the upcoming goals for Scarlet is to have clustering support. You
+  should eventually be able to bring together any number of Redis servers, and
+  while we are at it, why not also throw in some master/slave failover
+  handling? This would be complete with an automatic elections, and slave
+  reassignments. The only catch being that you have to funnel all your traffic through Scarlet.
+</p>
+
+<h3>TCP load blanacer/proxy</h3>
+
+<p>
+  For times where you may want to take advantage of Scarlet's clustering 
+  facilities, but do not want to use the HTTP interface, Scarlet should be
+  able to proxy any of the usual <a href="http://redis.io/topics/protocol">
+  Redis traffic</a>, as well as load balance between slaves.
+</p>
+<p>
+  Also in this point, is the notion of automatically sending all write-op 
+  commands to the top-level master node, and sending all read-op commands to
+  slaves.
+</p>
+
+<h3>Monitoring</h3>
+
+<p>
+  What systems team doesn't love a good monitoring interface? Watch any
+  number of upstream Redis nodes, from a dedicated machine, just to make sure
+  everything is purring.
+</p>
+
 <h2>Copying &amp; contributing</h2>
 
 <p>See the LICENSE.</p>
