@@ -3,12 +3,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
-	"errors"
 )
 
 var (
@@ -49,7 +49,7 @@ func GetInformation(rw http.ResponseWriter, req *http.Request) {
 
 type RequestInfo struct {
 	DbNum int
-	Key string
+	Key   string
 }
 
 func GetRequestInfo(r *http.Request) (ri *RequestInfo, err error) {

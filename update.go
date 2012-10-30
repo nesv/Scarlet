@@ -3,10 +3,10 @@
 package main
 
 import (
-	"net/http"
 	"fmt"
-	"strings"
+	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Handles HTTP PUT requests, inteded for updating keys.
@@ -14,7 +14,7 @@ import (
 func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 	client := Database.DB(info.DbNum)
 	existsp, err := client.Exists(info.Key)
-	if  err != nil {
+	if err != nil {
 		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		return
 	}
@@ -28,7 +28,7 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("%s", err))
 			}
-			
+
 			setp, err := client.Expire(info.Key, int64(ittl))
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("%s", err))

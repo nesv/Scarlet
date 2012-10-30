@@ -3,14 +3,14 @@
 package main
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 func HandleDeleteOperation(req *http.Request, info *RequestInfo) (response R) {
 	client := Database.DB(info.DbNum)
 	existsp, err := client.Exists(info.Key)
-	if  err != nil {
+	if err != nil {
 		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		return
 	}
