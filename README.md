@@ -50,6 +50,7 @@ See the LICENSE.
 	reported properly.
 *	Errors on create operations (through HTTP POST) are now displaying 
 	properly.
+*	HTTP DELETE operations are now supported
 
 *0.0.4*
 *	You can now create keys using the HTTP POST method.
