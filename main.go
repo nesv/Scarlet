@@ -12,18 +12,19 @@ import (
 	"syscall"
 )
 
+const (
+	DefaultListenAddress = ":6380"
+	Version = "0.5.0"
+)
+
 var (
-	ListenAddress = flag.String("a", ":6380", "The address Scarlet should listen on.")
+	ListenAddress = flag.String("a", DefaultListenAddress, "The address Scarlet should listen on.")
 	configPath    = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
 	debug         = flag.Bool("d", false, "Enable debugging")
 	config        *Configuration
 	redisClient   *redis.Client
 	Database      *ConnectionMap
 	systemSignals = make(chan os.Signal)
-)
-
-const (
-	Version = "0.0.4"
 )
 
 func main() {
@@ -64,7 +65,11 @@ func main() {
 	// If the HTTP server was enabled in the configuration, start it.
 	//
 	if config.HTTP.Enabled {
-		go startHttp(config.HttpAddress())
+		if *ListenAddress != DefaultListenAddress {
+			go startHttp(*ListenAddress)
+		} else {
+			go startHttp(config.HttpAddress())
+		}
 	}
 
 	// Start the mainloop (the signal listener)
