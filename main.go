@@ -14,7 +14,7 @@ import (
 
 const (
 	DefaultListenAddress = ":6380"
-	Version = "0.0.4"
+	Version = "0.5.0"
 )
 
 var (
