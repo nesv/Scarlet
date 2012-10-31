@@ -3,8 +3,8 @@
 package main
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 // Handles HTTP GET requests, which are intended for retrieving data.

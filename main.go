@@ -6,6 +6,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/simonz05/godis/redis"
 	"os"
 	"os/signal"
@@ -14,13 +15,16 @@ import (
 
 const (
 	DefaultListenAddress = ":6380"
-	Version = "0.5.0"
+	DefaultRedisAddress  = "tcp:127.0.0.1:6379"
+	Version              = "0.6.0"
 )
 
 var (
 	ListenAddress = flag.String("a", DefaultListenAddress, "The address Scarlet should listen on.")
 	configPath    = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
 	debug         = flag.Bool("d", false, "Enable debugging")
+	RedisAddress  = flag.String("r", DefaultRedisAddress, "The upstream Redis host to connect to")
+	RedisPassword = flag.String("rp", "", "Password to use when authenticating to the upstream Redis host")
 	config        *Configuration
 	redisClient   *redis.Client
 	Database      *ConnectionMap
@@ -49,16 +53,17 @@ func main() {
 
 	// Connect to the initial Redis host
 	//
-	redisClient = redis.New(config.Redis.ConnectAddr(), 0, config.Redis.Password)
+	if *RedisAddress != DefaultRedisAddress {
+		redisClient = redis.New(*RedisAddress, 0, *RedisPassword)
+		Database = NewConnectionMap(*RedisAddress, *RedisPassword)
+	} else {
+		redisClient = redis.New(config.Redis.ConnectAddr(), 0, config.Redis.Password)
+		Database = NewConnectionMap(config.Redis.ConnectAddr(), config.Redis.Password)
+	}
 	defer redisClient.Quit()
-
-	// Get some information from the Redis host, and populate connections
-	// for the databases on the host.
-	//
-	Database = NewConnectionMap(config.Redis.ConnectAddr(), config.Redis.Password)
 	err = Database.PopulateConnections()
 	if err != nil {
-		println("FATAL", "Could not populate connections:", err)
+		fmt.Printf("FATAL\tCould not populate connections: %s\n", err)
 		return
 	}
 
