@@ -45,8 +45,8 @@ See the LICENSE.
 ## Changelog
 
 0.6.0
-*	Removed the need for a configuration file, as all of the necessary options
-	could be specified by a command-line flag
+*	Added some command-line flags that let you override the upstream Redis
+	host and password.
 
 0.5.0
 *	Fixed a bug where non-existent keys returned type "none", and the error
