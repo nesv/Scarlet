@@ -1,3 +1,6 @@
+0.7.0 &mdash; 2012-11-02
+*	Added a handler function for the "/" location
+
 0.6.1 &mdash; 2012-11-02
 *   Fixed some overly-specific parsing logic in `redis.go`
 
