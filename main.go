@@ -16,7 +16,7 @@ import (
 const (
 	DefaultListenAddress = ":6380"
 	DefaultRedisAddress  = "tcp:127.0.0.1:6379"
-	Version              = "0.6.0"
+	Version              = "0.6.1"
 )
 
 var (

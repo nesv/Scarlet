@@ -8,16 +8,16 @@ You can install Scarlet simply by running the following command (assuming you
 have a Go environment setup):
 
     go get github.com/nesv/Scarlet
-	
+
 Alternately, if you would like to clone the repository and build it from there,
 the sources also ship with a simple Makefile; all you have to do once you get
 the repository cloned is run:
 
     make
-	
+
 ...and you will have a `Scarlet` executable in your current directory, that you
 can move around, to wherever.
-	
+
 ## Issues?
 
 If you experience any issues, please create an issue [here](https://github.com/nesv/Scarlet/issues),
@@ -44,15 +44,18 @@ See the LICENSE.
 
 ## Changelog
 
+0.6.1 &mdash; 2012-11-02
+*   Fixed some overly-specific parsing logic in `redis.go`
+
 0.6.0
 *	Added some command-line flags that let you override the upstream Redis
 	host and password.
 
 0.5.0
 *	Fixed a bug where non-existent keys returned type "none", and the error
-	in the response said it was an "unknown key type". The error is now 
+	in the response said it was an "unknown key type". The error is now
 	reported properly.
-*	Errors on create operations (through HTTP POST) are now displaying 
+*	Errors on create operations (through HTTP POST) are now displaying
 	properly.
 *	HTTP DELETE operations are now supported
 
