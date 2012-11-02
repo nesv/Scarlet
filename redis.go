@@ -110,8 +110,8 @@ func GetHostInfo(c *redis.Client) (info map[string]string, err error) {
 	items := strings.Split(elem.String(), "\r\n")
 	info = make(map[string]string)
 	for i := 0; i < len(items); i++ {
-		if len(items[i]) == 0 {
-			break
+		if len(items[i]) == 0 || string(items[i][0]) == "#" {
+			continue
 		}
 		opt := strings.Split(items[i], ":")
 		info[opt[0]] = opt[1]
