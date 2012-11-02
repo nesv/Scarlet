@@ -33,6 +33,16 @@ func NewConnectionMap(netaddr, password string) (cm *ConnectionMap) {
 	return
 }
 
+// Returns a list of database numbers for which there are currently connections
+// established.
+//
+func (c *ConnectionMap) NConnections() (dbs []int) {
+	for k, _ := range c.connections {
+		dbs = append(dbs, k)
+	}
+	return
+}
+
 // Associates a Redis client to the database it is connected to, so it can be
 // kept around for future use.
 //
