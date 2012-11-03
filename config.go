@@ -32,11 +32,7 @@ func (r RedisBlock) InfoDisabled() (p bool) {
 }
 
 func (r RedisBlock) ConnectAddr() (addr string) {
-	if r.Protocol == "unix" {
-		addr = fmt.Sprintf("%s:%s", r.Protocol, r.Host)
-	} else if r.Protocol == "tcp" {
-		addr = fmt.Sprintf("%s:%s:%d", r.Protocol, r.Host, r.Port)
-	}
+	addr = fmt.Sprintf("%s:%d", r.Host, r.Port)
 	return
 }
 

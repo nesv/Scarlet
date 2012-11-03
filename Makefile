@@ -10,6 +10,6 @@ clean:
 	find . -iname "*~" -exec rm -f {} \;
 
 deps:
-	go get github.com/simonz05/godis/redis
+	go get github.com/garyburd/redigo/redis
 
 .PHONY: all clean deps
