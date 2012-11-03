@@ -14,7 +14,7 @@ import (
 
 const (
 	DefaultListenAddress = ":6380"
-	Version              = "0.7.0"
+	Version              = "0.7.1"
 	DefaultRedisAddress  = "127.0.0.1:6379"
 )
 
