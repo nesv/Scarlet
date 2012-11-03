@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/garyburd/redigo/redis"
 	"net/http"
 )
 
@@ -22,18 +23,17 @@ func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 		// of the keys in the database.
 		//
 		fmt.Println("KEYS", "*")
-		v, err := client.Do("KEYS", "*")
+		v, err := redis.Values(client.Do("KEYS", "*"))
 		if err != nil {
 			response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
-		} else {
-			keys, ok := v.([]string)
-			if !ok {
-				msg := "Could not convert to string array."
-				response = R{"result": nil, "error": msg}
-				return
-			}
-			response = R{"result": keys, "error": nil}
+			return
 		}
+
+		var keys = make([]string, 0)
+		for i := 0; i < len(v); i++ {
+			keys = append(keys, fmt.Sprintf("%s", v[i]))
+		}
+		response = R{"result": keys, "error": nil}
 		return
 	}
 
@@ -58,38 +58,50 @@ func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 	switch keyType {
 	case "string":
 		println("GET", key)
-		v, _ := client.Do("GET", key)
-		r, _ := v.(string)
+		r, _ := redis.String(client.Do("GET", key))
 		response = R{"result": r, "error": nil}
 
 	case "set":
 		println("SMEMBERS", key)
-		v, _ := client.Do("SMEMBERS", key)
-		r, _ := v.([]string)
+		v, _ := redis.Values(client.Do("SMEMBERS", key))
+		var r []string
+		for i := 0; i < len(v); i++ {
+			r = append(r, fmt.Sprintf("%s", v[i]))
+		}
 		response = R{"result": r, "error": nil}
 
 	case "zset":
 		println("ZRANGE", key, 0, -1)
-		v, _ := client.Do("ZRANGE", key, 0, -1)
-		r, _ := v.([]string)
+		v, _ := redis.Values(client.Do("ZRANGE", key, 0, -1))
+		var r []string
+		for i := 0; i < len(v); i++ {
+			r = append(r, fmt.Sprintf("%s", v[i]))
+		}
 		response = R{"result": r, "error": nil}
 
 	case "list":
 		println("LRANGE", key, 0, -1)
-		v, _ := client.Do("LRANGE", key, 0, -1)
-		r, _ := v.([]string)
+		v, _ := redis.Values(client.Do("LRANGE", key, 0, -1))
+		var r []string
+		for i := 0; i < len(v); i++ {
+			r = append(r, fmt.Sprintf("%s", v[i]))
+		}
 		response = R{"result": r, "error": nil}
 
 	case "hash":
 		if field := req.FormValue("field"); field != "" {
 			println("HGET", key, field)
-			v, _ := client.Do("HGET", key, field)
-			r, _ := v.(string)
+			r, _ := redis.String(client.Do("HGET", key, field))
 			response = R{"result": r, "error": nil}
 		} else {
 			println("HGETALL", key)
-			v, _ := client.Do("HGETALL", key)
-			r, _ := v.(map[string]string)
+			v, _ := redis.Values(client.Do("HGETALL", key))
+			var r = make(map[string]string)
+			for i := 0; i < len(v); i += 2 {
+				key := fmt.Sprintf("%s", v[i])
+				val := fmt.Sprintf("%s", v[i+1])
+				r[key] = val
+			}
 			response = R{"result": r, "error": nil}
 		}
 

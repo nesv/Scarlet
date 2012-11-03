@@ -6,6 +6,7 @@ package main
 
 import (
 	"errors"
+	//	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"regexp"
 	"strconv"
@@ -19,7 +20,7 @@ var (
 // An idiomatic function to create a new connection to a Redis host, and
 // subsequently authenticate, and select a database.
 //
-func ConnectToRedisHost(addr, password string, db int) (c redis.Conn, err error) {
+func ConnectToRedisHost(addr, password string, db interface{}) (c redis.Conn, err error) {
 	conn, e := redis.Dial("tcp", addr)
 	if e != nil {
 		err = e
@@ -41,8 +42,14 @@ func ConnectToRedisHost(addr, password string, db int) (c redis.Conn, err error)
 
 	// Now, change over to the specified database.
 	//
-	dbs := string(db)
-	if _, e := redis.String(conn.Do("SELECT", dbs)); e != nil {
+	/*
+		dbs, ok := db.(string)
+		if !ok {
+			err = errors.New(fmt.Sprintf("Could not convert %v to a string.", db))
+			return
+		}
+	*/
+	if _, e := redis.String(conn.Do("SELECT", db)); e != nil {
 		err = e
 		return
 	}
@@ -131,17 +138,13 @@ func (cm *ConnectionMap) PopulateConnections() (err error) {
 			if matches == nil {
 				continue
 			}
-			println("INFO", "Found", matches[0], matches[1])
-			dbnum, e := strconv.Atoi(matches[1])
+			println("Found", matches[0], matches[1])
+			conn, e := ConnectToRedisHost(cm.netaddr, cm.password, matches[1])
 			if e != nil {
 				err = e
 				return
 			}
-			conn, e := ConnectToRedisHost(cm.netaddr, cm.password, dbnum)
-			if e != nil {
-				err = e
-				return
-			}
+			dbnum, _ := strconv.Atoi(matches[1])
 			conns[dbnum] = conn
 		}
 	}
