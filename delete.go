@@ -8,19 +8,20 @@ import (
 )
 
 func HandleDeleteOperation(req *http.Request, info *RequestInfo) (response R) {
-	client := Database.DB(info.DbNum)
-	existsp, err := client.Exists(info.Key)
+	client, err := Database.DB(info.DbNum)
+	v, err := client.Do("EXISTS", info.Key)
 	if err != nil {
 		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		return
 	}
 
-	if existsp {
+	existsp, ok := v.(bool)
+	if ok && existsp {
 		// The key exists!
 		//
 		// NOW DELETE IT!
 		//
-		if _, err = client.Del(info.Key); err != nil {
+		if _, err = client.Do("DEL", info.Key); err != nil {
 			response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		} else {
 			fmt.Println("DEL", info.Key)

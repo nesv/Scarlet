@@ -41,6 +41,7 @@ func GetInformation(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	println("INFO")
+	redisClient, err := Database.DB(0)
 	info, err := GetHostInfo(redisClient)
 	response = R{"result": info, "error": err}
 	fmt.Fprint(rw, response)
@@ -68,12 +69,20 @@ func GetRequestInfo(r *http.Request) (ri *RequestInfo, err error) {
 	return
 }
 
-// Dispatches the incoming request to the proper action handler, depending on 
+func RootHandler() (response R) {
+	response = R{"result": R{"databases": Database.NConnections()},
+		"error": nil}
+	return
+}
+
+// Dispatches the incoming request to the proper action handler, depending on
 // the HTTP method that was used.
 //
 func DispatchRequest(rw http.ResponseWriter, req *http.Request) {
 	var response R
-	if info, err := GetRequestInfo(req); err == nil {
+	if req.URL.String() == "/" {
+		response = RootHandler()
+	} else if info, err := GetRequestInfo(req); err == nil {
 		switch req.Method {
 		case "GET":
 			response = HandleReadOperation(req, info)
