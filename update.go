@@ -12,13 +12,14 @@ import (
 // Handles HTTP PUT requests, inteded for updating keys.
 //
 func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
-	client := Database.DB(info.DbNum)
-	existsp, err := client.Exists(info.Key)
+	client, err := Database.DB(info.DbNum)
+	v, err := client.Do("EXISTS", info.Key)
 	if err != nil {
 		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		return
 	}
-	if existsp {
+	existsp, ok := v.(bool)
+	if ok && existsp {
 		var errors []string
 
 		// Check if the user specfieid an expiry time for the key.
@@ -29,12 +30,13 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 				errors = append(errors, fmt.Sprintf("%s", err))
 			}
 
-			setp, err := client.Expire(info.Key, int64(ittl))
+			v, err := client.Do("EXPIRE", info.Key, int64(ittl))
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("%s", err))
 			}
 
-			if setp {
+			setp, ok := v.(bool)
+			if ok && setp {
 				fmt.Println("EXPIRE", info.Key, ittl)
 			}
 		}
@@ -47,11 +49,17 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 		// Now we need to branch, depending on the type of key we are setting
 		// to.
 		//
-		keytype, err := client.Type(info.Key)
+		v, err := client.Do("TYPE", info.Key)
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("%s", err))
 		}
 
+		keytype, ok := v.(string)
+		if !ok {
+			msg := "Could not convert reply to string."
+			response = R{"result": nil, "error": msg}
+			return
+		}
 		switch keytype {
 		case "string":
 			if offset := req.FormValue("offset"); len(offset) > 0 {
@@ -59,15 +67,15 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 				if err != nil {
 					errors = append(errors, fmt.Sprintf("%s", err))
 				} else {
-					_, err = client.Setrange(info.Key, i, val)
+					_, err = client.Do("SETRANGE", info.Key, i, val)
 					fmt.Println("SETRANGE", info.Key, i, val)
 				}
 			}
-			err = client.Set(info.Key, val)
+			_, err = client.Do("SET", info.Key, val)
 			fmt.Println("SET", info.Key, val)
 
 		case "set":
-			_, err = client.Sadd(info.Key, val)
+			_, err = client.Do("SADD", info.Key, val)
 			fmt.Println("SADD", info.Key, val)
 
 		case "zset":
@@ -80,7 +88,7 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 					ranking = f
 				}
 			}
-			_, err = client.Zadd(info.Key, ranking, val)
+			_, err = client.Do("ZADD", info.Key, ranking, val)
 			fmt.Println("ZADD", info.Key, ranking, val)
 
 		case "hash":
@@ -90,7 +98,7 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 				response = R{"result": nil, "error": e}
 				return
 			}
-			_, err = client.Hset(info.Key, field, val)
+			_, err = client.Do("HSET", info.Key, field, val)
 			fmt.Println("HSET", info.Key, field, val)
 
 		case "list":
@@ -100,10 +108,10 @@ func HandleUpdateOperation(req *http.Request, info *RequestInfo) (response R) {
 			}
 
 			if side == "left" {
-				_, err = client.Lpush(info.Key, val)
+				_, err = client.Do("LPUSH", info.Key, val)
 				fmt.Println("LPUSH", info.Key, val)
 			} else {
-				_, err = client.Rpush(info.Key, val)
+				_, err = client.Do("RPUSH", info.Key, val)
 				fmt.Println("RPUSH", info.Key, val)
 			}
 		}

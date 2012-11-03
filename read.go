@@ -12,7 +12,7 @@ import (
 func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 	// Get a Redis client for the specified database number.
 	//
-	client := Database.DB(info.DbNum)
+	client, err := Database.DB(info.DbNum)
 
 	// Parse out the key name
 	//
@@ -22,10 +22,16 @@ func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 		// of the keys in the database.
 		//
 		fmt.Println("KEYS", "*")
-		keys, err := client.Keys("*")
+		v, err := client.Do("KEYS", "*")
 		if err != nil {
 			response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		} else {
+			keys, ok := v.([]string)
+			if !ok {
+				msg := "Could not convert to string array."
+				response = R{"result": nil, "error": msg}
+				return
+			}
 			response = R{"result": keys, "error": nil}
 		}
 		return
@@ -34,9 +40,16 @@ func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 	// Get the key type, so that we know how to properly format the
 	// response.
 	//
-	keyType, err := client.Type(key)
+	v, err := client.Do("TYPE", key)
 	if err != nil {
 		response = R{"result": nil, "error": err}
+		return
+	}
+
+	keyType, ok := v.(string)
+	if !ok {
+		msg := fmt.Sprintf("Could not convert %v to string.", v)
+		response = R{"result": nil, "error": msg}
 		return
 	}
 
@@ -45,33 +58,39 @@ func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 	switch keyType {
 	case "string":
 		println("GET", key)
-		v, _ := client.Get(key)
-		response = R{"result": v.String(), "error": nil}
+		v, _ := client.Do("GET", key)
+		r, _ := v.(string)
+		response = R{"result": r, "error": nil}
 
 	case "set":
 		println("SMEMBERS", key)
-		v, _ := client.Smembers(key)
-		response = R{"result": v.StringArray(), "error": nil}
+		v, _ := client.Do("SMEMBERS", key)
+		r, _ := v.([]string)
+		response = R{"result": r, "error": nil}
 
 	case "zset":
 		println("ZRANGE", key, 0, -1)
-		v, _ := client.Zrange(key, 0, -1)
-		response = R{"result": v.StringArray(), "error": nil}
+		v, _ := client.Do("ZRANGE", key, 0, -1)
+		r, _ := v.([]string)
+		response = R{"result": r, "error": nil}
 
 	case "list":
 		println("LRANGE", key, 0, -1)
-		v, _ := client.Lrange(key, 0, -1)
-		response = R{"result": v.StringArray(), "error": nil}
+		v, _ := client.Do("LRANGE", key, 0, -1)
+		r, _ := v.([]string)
+		response = R{"result": r, "error": nil}
 
 	case "hash":
 		if field := req.FormValue("field"); field != "" {
 			println("HGET", key, field)
-			v, _ := client.Hget(key, field)
-			response = R{"result": v.String(), "error": nil}
+			v, _ := client.Do("HGET", key, field)
+			r, _ := v.(string)
+			response = R{"result": r, "error": nil}
 		} else {
 			println("HGETALL", key)
-			reply, _ := client.Hgetall(key)
-			response = R{"result": reply.StringMap(), "error": nil}
+			v, _ := client.Do("HGETALL", key)
+			r, _ := v.(map[string]string)
+			response = R{"result": r, "error": nil}
 		}
 
 	case "none":

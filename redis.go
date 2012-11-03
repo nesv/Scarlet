@@ -6,7 +6,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"regexp"
 	"strconv"
@@ -42,12 +41,9 @@ func ConnectToRedisHost(addr, password string, db int) (c redis.Conn, err error)
 
 	// Now, change over to the specified database.
 	//
-	if ok, e := redis.Bool(conn.Do("SELECT", db)); err != nil {
+	dbs := string(db)
+	if _, e := redis.String(conn.Do("SELECT", dbs)); e != nil {
 		err = e
-		return
-	} else if !ok {
-		msg := fmt.Sprintf("Could not SELECT database #%d", db)
-		err = errors.New(msg)
 		return
 	}
 
@@ -161,8 +157,8 @@ func GetHostInfo(c redis.Conn) (info map[string]string, err error) {
 	items := strings.Split(v, "\r\n")
 	info = make(map[string]string)
 	for i := 0; i < len(items); i++ {
-		if len(items[i]) == 0 {
-			break
+		if len(items[i]) == 0 || string(items[i][0]) == "#" {
+			continue
 		}
 		opt := strings.Split(items[i], ":")
 		info[opt[0]] = opt[1]

@@ -7,7 +7,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,7 +25,6 @@ var (
 	RedisAddress  = flag.String("r", DefaultRedisAddress, "The upstream Redis host to connect to")
 	RedisPassword = flag.String("rp", "", "Password to use when authenticating to the upstream Redis host")
 	config        *Configuration
-	redisClient   redis.Conn
 	Database      *ConnectionMap
 	systemSignals = make(chan os.Signal)
 )
@@ -54,21 +52,10 @@ func main() {
 	// Connect to the initial Redis host
 	//
 	if *RedisAddress != DefaultRedisAddress {
-		redisClient, e := ConnectToRedisHost(*RedisAddress, *RedisPassword, 0)
-		if e != nil {
-			fmt.Println(e)
-			return
-		}
 		Database = NewConnectionMap(*RedisAddress, *RedisPassword)
 	} else {
-		redisClient, e := ConnectToRedisHost(config.Redis.ConnectAddr(), config.Redis.Password, 0)
-		if e != nil {
-			fmt.Println(e)
-			return
-		}
 		Database = NewConnectionMap(config.Redis.ConnectAddr(), config.Redis.Password)
 	}
-	defer redisClient.Close()
 	err = Database.PopulateConnections()
 	if err != nil {
 		fmt.Printf("FATAL\tCould not populate connections: %s\n", err)

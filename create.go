@@ -12,8 +12,8 @@ import (
 // Handles HTTP POST requests, intended for creating new keys.
 //
 func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
-	client := Database.DB(info.DbNum)
-	existsp, err := client.Exists(info.Key)
+	client, err := Database.DB(info.DbNum)
+	v, err := client.Do("EXISTS", info.Key)
 	if err != nil {
 		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}
 		return
@@ -22,7 +22,8 @@ func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
 	// Does the key already exist? If so, bomb out. We only want to be able
 	// to create keys from HTTP POST requests.
 	//
-	if existsp {
+	existsp, ok := v.(bool)
+	if ok && existsp {
 		response = R{"result": nil, "error": "Key already exists."}
 		return
 	}
@@ -71,13 +72,13 @@ func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
 	//
 	switch keytype {
 	case "string":
-		err = client.Set(info.Key, value)
+		_, err = client.Do("SET", info.Key, value)
 
 	case "list":
-		_, err = client.Lpush(info.Key, value)
+		_, err = client.Do("LPUSH", info.Key, value)
 
 	case "set":
-		_, err = client.Sadd(info.Key, value)
+		_, err = client.Do("SADD", info.Key, value)
 
 	case "zset":
 		var ranking float64
@@ -90,11 +91,11 @@ func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
 		} else {
 			ranking = 1.0
 		}
-		_, err = client.Zadd(info.Key, ranking, value)
+		_, err = client.Do("ZADD", info.Key, ranking, value)
 
 	case "hash":
 		if field := req.FormValue("field"); len(field) > 0 {
-			_, err = client.Hset(info.Key, field, value)
+			_, err = client.Do("HSET", info.Key, field, value)
 		} else {
 			err = errors.New("No field name specified.")
 		}
