@@ -1,3 +1,6 @@
+0.7.1 &mdash; 2012-11-03
+*   Converted over to using Gary Burd's "redigo" driver
+
 0.7.0 &mdash; 2012-11-02
 *	Added a handler function for the "/" location
 
