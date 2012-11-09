@@ -12,7 +12,7 @@ import (
 // Handles HTTP POST requests, intended for creating new keys.
 //
 func HandleCreateOperation(req *http.Request, info *RequestInfo) (response R) {
-	client, err := Database.DB(info.DbNum)
+	client := Redis.Db(info.DbNum)
 	v, err := client.Do("EXISTS", info.Key)
 	if err != nil {
 		response = R{"result": nil, "error": fmt.Sprintf("%s", err)}

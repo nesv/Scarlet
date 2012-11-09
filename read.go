@@ -13,7 +13,7 @@ import (
 func HandleReadOperation(req *http.Request, info *RequestInfo) (response R) {
 	// Get a Redis client for the specified database number.
 	//
-	client, err := Database.DB(info.DbNum)
+	client := Redis.Db(info.DbNum)
 
 	// Parse out the key name
 	//

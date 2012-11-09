@@ -14,13 +14,11 @@ import (
 // This function should definitely be called as a goroutine.
 //
 func StartAutoDiscovery() {
-	conn, err := Database.DB(0)
+	hostInfo, err := Redis.Info("replication")
 	if err != nil {
-		fmt.Println("Error:", err)
-		fmt.Println("Auto-discovery halted")
-		return
+		fmt.Println("REPLICATION\tError while fetching replication info from server.")
+		fmt.Println("REPLICATION\tHalting auto-discovery.")
 	}
-	hostInfo, err := GetHostInfo(conn, "replication")
 
 	// From the info we have from our current connection, let's propagate
 	// "downwards" if we are a master.

@@ -20,17 +20,35 @@ var (
 // An idiomatic function to create a new connection to a Redis host, and
 // subsequently authenticate, and select a database.
 //
-func ConnectToRedisHost(addr, password string, db interface{}) (c redis.Conn, err error) {
-	conn, e := redis.Dial("tcp", addr)
+func ConnectToRedisHost(addr, password string) (r *RedisHost, err error) {
+	r = &RedisHost{Addr: addr, password: password}
+	err = r.Connect()
+	return
+}
+
+// A type to represent a Redis host.
+//
+type RedisHost struct {
+	Addr      string
+	password  string
+	Slaves    []*RedisHost
+	databases map[int]redis.Conn
+	Master    *RedisHost
+}
+
+func (h *RedisHost) NConnections() (n int) {
+	n = len(h.databases)
+	return
+}
+
+func (h *RedisHost) Connect() (err error) {
+	conn, e := redis.Dial("tcp", h.Addr)
 	if e != nil {
 		err = e
 		return
 	}
-
-	// Did the user specify a password?
-	//
-	if len(password) > 0 {
-		ok, e := redis.Bool(conn.Do("AUTH", password))
+	if len(h.password) > 0 {
+		ok, e := redis.Bool(conn.Do("AUTH", h.password))
 		if e != nil {
 			err = e
 			return
@@ -39,165 +57,43 @@ func ConnectToRedisHost(addr, password string, db interface{}) (c redis.Conn, er
 			return
 		}
 	}
+	if _, e := redis.String(conn.Do("SELECT", 0)); e != nil {
+		err = e
+	}
 
-	// Now, change over to the specified database.
+	// Initialize the int->redis.Conn map for storing database connections.
 	//
-	if _, e := redis.String(conn.Do("SELECT", db)); e != nil {
-		err = e
-		return
-	}
+	h.databases = make(map[int]redis.Conn)
 
-	c = conn
-	return
-}
-
-// A ConnectionMap holds a collection of Redis clients, and provides a nice,
-// easy way to quickly establish a new connection to a database on a Redis
-// host, and get the appropriate connection for the incoming HTTP request.
-//
-type ConnectionMap struct {
-	netaddr     string
-	password    string
-	client      redis.Conn
-	connections map[int]redis.Conn
-}
-
-// Creates (and returns) a pointer to a ConnectionMap.
-//
-func NewConnectionMap(netaddr, password string) (cm *ConnectionMap) {
-	cm = &ConnectionMap{netaddr: netaddr, password: password}
-	return
-}
-
-// Returns a list of database numbers for which there are currently connections
-// established.
-//
-func (c *ConnectionMap) NConnections() (dbs []int) {
-	for k, _ := range c.connections {
-		dbs = append(dbs, k)
-	}
-	return
-}
-
-// Associates a Redis client to the database it is connected to, so it can be
-// kept around for future use.
-//
-func (c *ConnectionMap) Add(db int, rc redis.Conn) {
-	c.connections[db] = rc
-	return
-}
-
-// Returns the appropriate Redis client for the database number provided. If
-// there is no client for that database number, then this function will create
-// it, and return it.
-//
-func (c *ConnectionMap) DB(db int) (r redis.Conn, err error) {
-	client, existsp := c.connections[db]
-	if existsp {
-		// Yay, we already have a client established to that database!
-		//
-		r = client
-		return
-	}
-
-	// Urg, it looks like this is the first time anything has been requested
-	// regarding this database. Let's establish a new connection to it, and
-	// save it for later.
+	// Put our connection in (for database #0) and populate connections.
 	//
-	// ...then return it (because we're nice like that).
-	//
-	if *debug {
-		println("DEBUG", "Creating new Redis connection to DB #", db)
-	}
-	r, e := ConnectToRedisHost(c.netaddr, c.password, db)
-	if e != nil {
-		err = e
-		return
-	}
-	c.Add(db, r)
+	h.databases[0] = conn
+	h.populateDatabaseConnections()
 	return
 }
 
-// Populates connections to any database. on the Redis host the ConnectionMap
-// was initialized with, that holds data.
+// Create connections to any other databases on this host.
 //
-func (cm *ConnectionMap) PopulateConnections() (err error) {
-	client, e := ConnectToRedisHost(cm.netaddr, cm.password, 0)
-	if e != nil {
-		err = e
+func (h *RedisHost) populateDatabaseConnections() {
+	info, err := h.Info("default")
+	if err != nil {
 		return
 	}
-
-	info, e := GetHostInfo(client, "default")
-	if e != nil {
-		err = e
-		return
-	}
-
-	conns := make(map[int]redis.Conn)
 	for k, _ := range info {
 		if InfoDbRegex.MatchString(k) {
 			matches := InfoDbRegex.FindStringSubmatch(k)
 			if matches == nil {
 				continue
 			}
-			println("Found", matches[0], matches[1])
-			conn, e := ConnectToRedisHost(cm.netaddr, cm.password, matches[1])
-			if e != nil {
-				err = e
+			dbnum, _ := strconv.Atoi(matches[1])
+			fmt.Println("Found", matches[0], matches[1])
+			c, err := h.connectToDatabase(dbnum)
+			if err != nil {
 				return
 			}
-			dbnum, _ := strconv.Atoi(matches[1])
-			conns[dbnum] = conn
+			h.databases[dbnum] = c
 		}
 	}
-	cm.connections = conns
-
-	// If replication mode is enabled, let's call our lovely goroutine for
-	// auto-discovering masters & slaves.
-	//
-	if *ReplicationMode {
-		go StartAutoDiscovery()
-	}
-
-	return
-}
-
-// Runs the INFO command on the remote Redis host, and nicely maps the response
-// from the server to a string-string map.
-//
-func GetHostInfo(c redis.Conn, section string) (info map[string]string, err error) {
-	switch section {
-	case "server", "clients", "memory", "persistence", "stats", "replication":
-		fallthrough
-	case "cpu", "commandstats", "cluster", "keyspace", "all", "default":
-	case "":
-		section = "default"
-	default:
-		err = errors.New(fmt.Sprintf("Invalid INFO section: %s", section))
-		return
-	}
-	v, err := redis.String(c.Do("INFO"))
-	items := strings.Split(v, "\r\n")
-	info = make(map[string]string)
-	for i := 0; i < len(items); i++ {
-		if len(items[i]) == 0 || string(items[i][0]) == "#" {
-			continue
-		}
-		opt := strings.Split(items[i], ":")
-		info[opt[0]] = opt[1]
-	}
-	return
-}
-
-// A type to represent a Redis host.
-//
-type RedisHost struct {
-	Addr      string
-	Port      int
-	password  string
-	Slaves    []RedisSlave
-	databases map[int]redis.Conn
 }
 
 func (h *RedisHost) Info(section string) (info map[string]string, err error) {
@@ -211,6 +107,7 @@ func (h *RedisHost) Info(section string) (info map[string]string, err error) {
 		err = errors.New(fmt.Sprintf("Invalid INFO section: %s", section))
 		return
 	}
+	c := h.Db(0)
 	v, err := redis.String(c.Do("INFO"))
 	items := strings.Split(v, "\r\n")
 	info = make(map[string]string)
@@ -224,21 +121,46 @@ func (h *RedisHost) Info(section string) (info map[string]string, err error) {
 	return
 }
 
-func (h *RedisHost) addDatabaseConnection(dbnum int, conn redis.Conn) {
-	h.databases[dbnum] = conn
+// Creates a new connection to a database "db" on *RedisHost "h".
+//
+func (h *RedisHost) connectToDatabase(db int) (r redis.Conn, err error) {
+	conn, err := redis.Dial("tcp", h.Addr)
+	if err != nil {
+		return
+	}
+
+	if len(h.password) > 0 {
+		authenticated, e := redis.Bool(conn.Do("AUTH", h.password))
+		if e != nil {
+			err = e
+			return
+		} else if !authenticated {
+			err = errors.New("AUTH failed.")
+		}
+	}
+
+	if _, err = redis.String(conn.Do("SELECT", db)); err != nil {
+		return
+	}
+
+	fmt.Println("Connected to database #", db)
+	r = conn
 	return
 }
 
+// Get a connection to a database "n".
+//
 func (h *RedisHost) Db(n int) (r redis.Conn) {
 	r, existsp := h.databases[n]
 	if existsp {
 		return
 	}
-	r, e := ConnectToRedisHost(h.Addr, h.password, n)
+
+	r, e := h.connectToDatabase(n)
 	if e != nil {
 		fmt.Println("Error:", e)
 		return
 	}
-	h.addDatabaseConnection(db, r)
+	h.databases[n] = r
 	return
 }

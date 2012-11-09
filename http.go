@@ -41,8 +41,7 @@ func GetInformation(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	println("INFO")
-	redisClient, err := Database.DB(0)
-	info, err := GetHostInfo(redisClient, "all")
+	info, err := Redis.Info("all")
 	response = R{"result": info, "error": err}
 	fmt.Fprint(rw, response)
 	return
@@ -70,7 +69,7 @@ func GetRequestInfo(r *http.Request) (ri *RequestInfo, err error) {
 }
 
 func RootHandler() (response R) {
-	response = R{"result": R{"databases": Database.NConnections()},
+	response = R{"result": R{"databases": Redis.NConnections()},
 		"error": nil}
 	return
 }

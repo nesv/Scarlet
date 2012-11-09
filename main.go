@@ -26,41 +26,36 @@ var (
 	RedisPassword   = flag.String("rp", "", "Password to use when authenticating to the upstream Redis host")
 	ReplicationMode = flag.Bool("replication", false, "Enable replication mode")
 	config          *Configuration
-	Database        *ConnectionMap
+	Redis           *RedisHost
 	systemSignals   = make(chan os.Signal)
 )
 
 func main() {
-	println("Starting scarlet", Version)
+	fmt.Println("Starting scarlet", Version)
 	flag.Parse()
 	if *debug {
-		println("debug:", "debugging enabled")
+		fmt.Println("debug:", "debugging enabled")
 	}
 
 	// Load the configuration
 	//
 	if *debug {
-		println("debug:", "using configuration file", *configPath)
+		fmt.Println("debug:", "using configuration file", *configPath)
 	}
 	config, err := LoadConfig(*configPath)
 	if err != nil {
 		panic(err)
 	}
 	if config.Redis.InfoDisabled() {
-		println("Retrieving node information is disabled")
+		fmt.Println("Retrieving node information is disabled")
 	}
 
 	// Connect to the initial Redis host
 	//
 	if *RedisAddress != DefaultRedisAddress {
-		Database = NewConnectionMap(*RedisAddress, *RedisPassword)
+		Redis, err = ConnectToRedisHost(*RedisAddress, *RedisPassword)
 	} else {
-		Database = NewConnectionMap(config.Redis.ConnectAddr(), config.Redis.Password)
-	}
-	err = Database.PopulateConnections()
-	if err != nil {
-		fmt.Printf("FATAL\tCould not populate connections: %s\n", err)
-		return
+		Redis, err = ConnectToRedisHost(config.Redis.ConnectAddr(), config.Redis.Password)
 	}
 
 	// If the HTTP server was enabled in the configuration, start it.
@@ -85,13 +80,13 @@ func startSignalListener() {
 		sig := <-systemSignals
 		switch sig {
 		case syscall.SIGINT:
-			println("caught SIGINT; exiting")
+			fmt.Println("caught SIGINT; exiting")
 			os.Exit(0)
 		case syscall.SIGKILL:
-			println("caught SIGKILL; exiting")
+			fmt.Println("caught SIGKILL; exiting")
 			os.Exit(0)
 		case syscall.SIGHUP:
-			println("caught SIHUP; reloading...")
+			fmt.Println("caught SIHUP; reloading...")
 			// call a function to reload the configuration, and
 			// re-initialize any connections (if necessary)
 		}
