@@ -19,14 +19,15 @@ const (
 )
 
 var (
-	ListenAddress = flag.String("a", DefaultListenAddress, "The address Scarlet should listen on.")
-	configPath    = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
-	debug         = flag.Bool("d", false, "Enable debugging")
-	RedisAddress  = flag.String("r", DefaultRedisAddress, "The upstream Redis host to connect to")
-	RedisPassword = flag.String("rp", "", "Password to use when authenticating to the upstream Redis host")
-	config        *Configuration
-	Database      *ConnectionMap
-	systemSignals = make(chan os.Signal)
+	ListenAddress   = flag.String("a", DefaultListenAddress, "The address Scarlet should listen on.")
+	configPath      = flag.String("c", "scarlet.conf.json", "Specify the configuration file")
+	debug           = flag.Bool("d", false, "Enable debugging")
+	RedisAddress    = flag.String("r", DefaultRedisAddress, "The upstream Redis host to connect to")
+	RedisPassword   = flag.String("rp", "", "Password to use when authenticating to the upstream Redis host")
+	ReplicationMode = flag.Bool("replication", false, "Enable replication mode")
+	config          *Configuration
+	Database        *ConnectionMap
+	systemSignals   = make(chan os.Signal)
 )
 
 func main() {

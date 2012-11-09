@@ -6,7 +6,7 @@ package main
 
 import (
 	"errors"
-	//	"fmt"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"regexp"
 	"strconv"
@@ -42,13 +42,6 @@ func ConnectToRedisHost(addr, password string, db interface{}) (c redis.Conn, er
 
 	// Now, change over to the specified database.
 	//
-	/*
-		dbs, ok := db.(string)
-		if !ok {
-			err = errors.New(fmt.Sprintf("Could not convert %v to a string.", db))
-			return
-		}
-	*/
 	if _, e := redis.String(conn.Do("SELECT", db)); e != nil {
 		err = e
 		return
@@ -135,7 +128,7 @@ func (cm *ConnectionMap) PopulateConnections() (err error) {
 		return
 	}
 
-	info, e := GetHostInfo(client)
+	info, e := GetHostInfo(client, "default")
 	if e != nil {
 		err = e
 		return
@@ -159,13 +152,31 @@ func (cm *ConnectionMap) PopulateConnections() (err error) {
 		}
 	}
 	cm.connections = conns
+
+	// If replication mode is enabled, let's call our lovely goroutine for
+	// auto-discovering masters & slaves.
+	//
+	if *ReplicationMode {
+		go StartAutoDiscovery()
+	}
+
 	return
 }
 
 // Runs the INFO command on the remote Redis host, and nicely maps the response
 // from the server to a string-string map.
 //
-func GetHostInfo(c redis.Conn) (info map[string]string, err error) {
+func GetHostInfo(c redis.Conn, section string) (info map[string]string, err error) {
+	switch section {
+	case "server", "clients", "memory", "persistence", "stats", "replication":
+		fallthrough
+	case "cpu", "commandstats", "cluster", "keyspace", "all", "default":
+	case "":
+		section = "default"
+	default:
+		err = errors.New(fmt.Sprintf("Invalid INFO section: %s", section))
+		return
+	}
 	v, err := redis.String(c.Do("INFO"))
 	items := strings.Split(v, "\r\n")
 	info = make(map[string]string)
@@ -176,5 +187,58 @@ func GetHostInfo(c redis.Conn) (info map[string]string, err error) {
 		opt := strings.Split(items[i], ":")
 		info[opt[0]] = opt[1]
 	}
+	return
+}
+
+// A type to represent a Redis host.
+//
+type RedisHost struct {
+	Addr      string
+	Port      int
+	password  string
+	Slaves    []RedisSlave
+	databases map[int]redis.Conn
+}
+
+func (h *RedisHost) Info(section string) (info map[string]string, err error) {
+	switch section {
+	case "server", "clients", "memory", "persistence", "stats", "replication":
+		fallthrough
+	case "cpu", "commandstats", "cluster", "keyspace", "all", "default":
+	case "":
+		section = "default"
+	default:
+		err = errors.New(fmt.Sprintf("Invalid INFO section: %s", section))
+		return
+	}
+	v, err := redis.String(c.Do("INFO"))
+	items := strings.Split(v, "\r\n")
+	info = make(map[string]string)
+	for i := 0; i < len(items); i++ {
+		if len(items[i]) == 0 || string(items[i][0]) == "#" {
+			continue
+		}
+		opt := strings.Split(items[i], ":")
+		info[opt[0]] = opt[1]
+	}
+	return
+}
+
+func (h *RedisHost) addDatabaseConnection(dbnum int, conn redis.Conn) {
+	h.databases[dbnum] = conn
+	return
+}
+
+func (h *RedisHost) Db(n int) (r redis.Conn) {
+	r, existsp := h.databases[n]
+	if existsp {
+		return
+	}
+	r, e := ConnectToRedisHost(h.Addr, h.password, n)
+	if e != nil {
+		fmt.Println("Error:", e)
+		return
+	}
+	h.addDatabaseConnection(db, r)
 	return
 }

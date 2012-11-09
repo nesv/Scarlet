@@ -42,7 +42,7 @@ func GetInformation(rw http.ResponseWriter, req *http.Request) {
 	}
 	println("INFO")
 	redisClient, err := Database.DB(0)
-	info, err := GetHostInfo(redisClient)
+	info, err := GetHostInfo(redisClient, "all")
 	response = R{"result": info, "error": err}
 	fmt.Fprint(rw, response)
 	return
