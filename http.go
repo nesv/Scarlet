@@ -68,7 +68,8 @@ func GetRequestInfo(r *http.Request) (ri *RequestInfo, err error) {
 	return
 }
 
-func RootHandler() (response R) {
+func RootHandler(req *http.Request) (response R) {
+	fmt.Printf("HTTP\t%s\t%s\t%s\n", req.RemoteAddr, req.Method, req.URL.String())
 	// Info on our host's immediate slaves.
 	//
 	var slaveInfo []string
@@ -79,12 +80,13 @@ func RootHandler() (response R) {
 	// Who is our master?
 	//
 	var masterAddress string
-	if info, err := Redis.Info("replication"); err != nil {
+	if info, err := Redis.Info("replication"); err == nil {
+		Debug(fmt.Sprint("Role: ", info["role"]))
 		switch info["role"] {
 		case "master":
 			masterAddress = ""
 		case "slave":
-			masterAddress = fmt.Sprintf("%s:%d", info["master_host"], info["master_port"])
+			masterAddress = fmt.Sprintf("%s:%s", info["master_host"], info["master_port"])
 		}
 	}
 
@@ -101,7 +103,7 @@ func RootHandler() (response R) {
 func DispatchRequest(rw http.ResponseWriter, req *http.Request) {
 	var response R
 	if req.URL.String() == "/" {
-		response = RootHandler()
+		response = RootHandler(req)
 	} else if info, err := GetRequestInfo(req); err == nil {
 		switch req.Method {
 		case "GET":

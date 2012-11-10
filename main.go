@@ -101,6 +101,6 @@ func startSignalListener() {
 
 func Debug(message string) {
 	if *debug {
-		fmt.Printf("debug\t%s\n", message)
+		fmt.Println("DEBUG\t", message)
 	}
 }
