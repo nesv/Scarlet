@@ -58,6 +58,12 @@ func main() {
 		Redis, err = ConnectToRedisHost(config.Redis.ConnectAddr(), config.Redis.Password)
 	}
 
+	// Start replication, if it was enabled.
+	//
+	if *ReplicationMode {
+		go StartAutoDiscovery()
+	}
+
 	// If the HTTP server was enabled in the configuration, start it.
 	//
 	if config.HTTP.Enabled {

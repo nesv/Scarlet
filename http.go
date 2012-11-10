@@ -69,8 +69,29 @@ func GetRequestInfo(r *http.Request) (ri *RequestInfo, err error) {
 }
 
 func RootHandler() (response R) {
-	response = R{"result": R{"databases": Redis.NConnections()},
-		"error": nil}
+	// Info on our host's immediate slaves.
+	//
+	var slaveInfo []string
+	for _, slave := range Redis.Slaves {
+		slaveInfo = append(slaveInfo, slave.Addr)
+	}
+
+	// Who is our master?
+	//
+	var masterAddress string
+	if info, err := Redis.Info("replication"); err != nil {
+		switch info["role"] {
+		case "master":
+			masterAddress = ""
+		case "slave":
+			masterAddress = fmt.Sprintf("%s:%d", info["master_host"], info["master_port"])
+		}
+	}
+
+	// Finally, build up the response, and return.
+	//
+	response = R{"result": R{"databases": Redis.NConnections(),
+		"slaves": slaveInfo, "master": masterAddress}, "error": nil}
 	return
 }
 
