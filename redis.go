@@ -36,11 +36,14 @@ type RedisHost struct {
 	Master    *RedisHost
 }
 
+// Returns the number of currently-active Redis connections for the host we
+// were configured to connect to.
 func (h *RedisHost) NConnections() (n int) {
 	n = len(h.databases)
 	return
 }
 
+// Connect to the Redis host, and authenticate if necessary.
 func (h *RedisHost) Connect() (err error) {
 	conn, e := redis.Dial("tcp", h.Addr)
 	if e != nil {
@@ -73,7 +76,6 @@ func (h *RedisHost) Connect() (err error) {
 }
 
 // Create connections to any other databases on this host.
-//
 func (h *RedisHost) populateDatabaseConnections() {
 	info, err := h.Info("default")
 	if err != nil {
@@ -122,7 +124,6 @@ func (h *RedisHost) Info(section string) (info map[string]string, err error) {
 }
 
 // Creates a new connection to a database "db" on *RedisHost "h".
-//
 func (h *RedisHost) connectToDatabase(db int) (r redis.Conn, err error) {
 	conn, err := redis.Dial("tcp", h.Addr)
 	if err != nil {
@@ -149,7 +150,6 @@ func (h *RedisHost) connectToDatabase(db int) (r redis.Conn, err error) {
 }
 
 // Get a connection to a database "n".
-//
 func (h *RedisHost) Db(n int) (r redis.Conn) {
 	r, existsp := h.databases[n]
 	if existsp {
