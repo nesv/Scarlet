@@ -57,6 +57,10 @@ func main() {
 	} else {
 		Redis, err = ConnectToRedisHost(config.Redis.ConnectAddr(), config.Redis.Password)
 	}
+	if err != nil {
+		fmt.Println("Fatal\tConnection failed; exiting")
+		return
+	}
 
 	// Start replication, if it was enabled.
 	//
