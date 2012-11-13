@@ -69,7 +69,6 @@ func GetRequestInfo(r *http.Request) (ri *RequestInfo, err error) {
 }
 
 func RootHandler(req *http.Request) (response R) {
-	fmt.Printf("HTTP\t%s\t%s\t%s\n", req.RemoteAddr, req.Method, req.URL.String())
 	// Info on our host's immediate slaves.
 	//
 	var slaveInfo []string
@@ -101,6 +100,12 @@ func RootHandler(req *http.Request) (response R) {
 // the HTTP method that was used.
 //
 func DispatchRequest(rw http.ResponseWriter, req *http.Request) {
+	// Who doesn't like logging?
+	//
+	fmt.Printf("HTTP\t%s\t%s\t%s\n", req.RemoteAddr, req.Method, req.URL.String())
+
+	// Now, dispatch the request to the appropriate handler function.
+	//
 	var response R
 	if req.URL.String() == "/" {
 		response = RootHandler(req)
