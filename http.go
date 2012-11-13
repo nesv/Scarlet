@@ -31,6 +31,7 @@ func startHttp(listenAddr string) {
 }
 
 func GetInformation(rw http.ResponseWriter, req *http.Request) {
+	fmt.Printf("HTTP\t%s\t%s\t%s\n", req.RemoteAddr, req.Method, req.URL.String())
 	rw.Header().Set("Content-Type", "application/json")
 	var response R
 	config, _ := LoadConfig(*configPath)
